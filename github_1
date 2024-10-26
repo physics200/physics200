@@ -1,0 +1,25 @@
+# Initialize a list to store speed values
+speeds = []
+
+# Collect speed values for 10 seconds using a for loop
+print("Enter the speed values for 10 seconds:")
+for i in range(10):
+    speed = float(input(f"Speed for second {i + 1}: "))
+    speeds.append(speed)
+
+# Determine the speed behavior
+if all(speed == speeds[0] for speed in speeds):
+    behavior = "Constant Speed"
+elif all(speeds[i] < speeds[i + 1] for i in range(len(speeds) - 1)):
+    behavior = "Accelerating"
+elif all(speeds[i] > speeds[i + 1] for i in range(len(speeds) - 1)):
+    behavior = "Decelerating"
+else:
+    behavior = "Variable Speed"
+
+# Calculate the average speed
+average_speed = sum(speeds) / len(speeds)
+
+# Output the results
+print(f"Speed Behavior: {behavior}")
+print(f"Average Speed: {average_speed:.2f} units")
