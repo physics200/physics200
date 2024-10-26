@@ -1,0 +1,26 @@
+# Initialize counters
+total_days = 14
+pills_taken = 0
+pills_missed = 0
+
+# Collect input for each day
+for day in range(1, total_days + 1):
+    input_value = int(input(f"Day {day} - Did you take your pill? (1 for Yes, 0 for No): "))
+    
+    # Update counts based on input
+    if input_value == 1:
+        pills_taken += 1
+    else:
+        pills_missed += 1
+
+# Display results
+print(f"\nTotal pills taken: {pills_taken}")
+print(f"Total pills missed: {pills_missed}")
+
+# Check adherence threshold
+missed_threshold = 3
+if pills_missed > missed_threshold:
+    print(f"Warning: You missed more than {missed_threshold} days. Please consult your healthcare provider.")
+
+# Print completion message
+print("Medication adherence tracking complete.")
