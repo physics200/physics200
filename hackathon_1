@@ -1,0 +1,90 @@
+import requests
+
+def read_api_key(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            api_key = file.read().strip()  # Remove any extra whitespace
+        return api_key
+    except FileNotFoundError:
+        print(f"Error: The file '{file_path}' was not found.")
+        return None
+
+def MidasAPI(api_key):
+    base_url = "https://api.midascivil.com/v1/"  # Example base URL (replace with actual)
+    
+    # Configure unit settings
+    unit_settings = {
+        "distance_unit": "meter",
+        "force_unit": "kN"
+    }
+    response = requests.post(f"{base_url}units", headers={"Authorization": f"Bearer {api_key}"}, json=unit_settings)
+    if response.status_code != 200:
+        print(f"Error setting unit settings: {response.text}")
+        return
+
+    # Define material properties
+    material_properties = {
+        "material_id": 1,
+        "name": "Concrete",
+        "elastic_modulus": 25000,  # MPa
+        "poisson_ratio": 0.2,
+        "density": 25  # kN/m^3
+    }
+    response = requests.post(f"{base_url}materials", headers={"Authorization": f"Bearer {api_key}"}, json=material_properties)
+    if response.status_code != 200:
+        print(f"Error defining materials: {response.text}")
+        return
+
+    # Create nodes
+    nodes = [
+        {"id": 1, "x": 0, "y": 0, "z": 0},
+        {"id": 2, "x": 5, "y": 0, "z": 0}  # 5m long beam
+    ]
+    for node in nodes:
+        response = requests.post(f"{base_url}nodes", headers={"Authorization": f"Bearer {api_key}"}, json=node)
+        if response.status_code != 200:
+            print(f"Error creating node {node['id']}: {response.text}")
+
+    # Create elements (beams)
+    elements = [
+        {"id": 1, "start_node": 1, "end_node": 2, "material_id": 1}
+    ]
+    for element in elements:
+        response = requests.post(f"{base_url}elements", headers={"Authorization": f"Bearer {api_key}"}, json=element)
+        if response.status_code != 200:
+            print(f"Error creating element {element['id']}: {response.text}")
+
+    # Assign boundary conditions
+    boundary_conditions = {
+        "node_id": 1,
+        "conditions": {"fixed": True}
+    }
+    response = requests.post(f"{base_url}boundary_conditions", headers={"Authorization": f"Bearer {api_key}"}, json=boundary_conditions)
+    if response.status_code != 200:
+        print(f"Error assigning boundary conditions: {response.text}")
+
+    # Define and apply loads
+    loads = [
+        {"element_id": 1, "type": "point_load", "magnitude": 10, "location": 2.5}  # 10 kN at midspan
+    ]
+    for load in loads:
+        response = requests.post(f"{base_url}loads", headers={"Authorization": f"Bearer {api_key}"}, json=load)
+        if response.status_code != 200:
+            print(f"Error applying load: {response.text}")
+
+    # Create load combinations
+    load_combination = {
+        "name": "Combination 1",
+        "loads": [{"load_id": 1, "factor": 1.0}]  # Simplified example
+    }
+    response = requests.post(f"{base_url}load_combinations", headers={"Authorization": f"Bearer {api_key}"}, json=load_combination)
+    if response.status_code != 200:
+        print(f"Error creating load combination: {response.text}")
+
+if __name__ == "__main__":
+    api_key = read_api_key('api_key.txt')
+    if api_key:
+        print("API key loaded successfully!")
+        MidasAPI(api_key)
+    else:
+        print("Failed to load API key.")
