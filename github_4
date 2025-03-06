@@ -1,0 +1,112 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+class WashingMachine {
+private:
+    int machineID;
+    string model;
+    bool status;
+    string currentCycle;
+    static int totalMachines;
+
+public:
+    // Constructor
+    WashingMachine() {
+        status = false;  // Default: machine is off
+    }
+
+    // Setters and Getters
+    void setMachineID(int id) {
+        machineID = id;
+    }
+    
+    int getMachineID() {
+        return machineID;
+    }
+
+    void setModel(string modelName) {
+        model = modelName;
+    }
+
+    string getModel() {
+        return model;
+    }
+
+    void setStatus(bool machineStatus) {
+        status = machineStatus;
+    }
+
+    bool getStatus() {
+        return status;
+    }
+
+    void setCurrentCycle(string cycle) {
+        currentCycle = cycle;
+    }
+
+    string getCurrentCycle() {
+        return currentCycle;
+    }
+
+    static int getTotalMachines() {
+        return totalMachines;
+    }
+
+    void incrementTotalMachines() {
+        totalMachines++;
+    }
+
+    // Methods to start and stop the washing machine
+    void start() {
+        status = true;
+        cout << "Washing machine started!" << endl;
+    }
+
+    void stop() {
+        status = false;
+        cout << "Washing machine stopped!" << endl;
+    }
+};
+
+// Initialize static variable
+int WashingMachine::totalMachines = 0;
+
+int main() {
+    // Creating first washing machine object
+    WashingMachine wm1;
+    wm1.setMachineID(101);
+    wm1.setModel("LG TurboWash");
+    wm1.setCurrentCycle("Normal");
+    wm1.incrementTotalMachines();
+
+    // Creating second washing machine object
+    WashingMachine wm2;
+    wm2.setMachineID(102);
+    wm2.setModel("Whirlpool");
+    wm2.setCurrentCycle("Quick Wash");
+    wm2.incrementTotalMachines();
+
+    // Start and display details of the machines
+    wm1.start();
+    cout << "Machine ID: " << wm1.getMachineID() 
+         << ", Model: " << wm1.getModel() 
+         << ", Status: " << (wm1.getStatus() ? "Running" : "Stopped") 
+         << ", Current Cycle: " << wm1.getCurrentCycle() << endl;
+
+    wm2.start();
+    cout << "Machine ID: " << wm2.getMachineID() 
+         << ", Model: " << wm2.getModel() 
+         << ", Status: " << (wm2.getStatus() ? "Running" : "Stopped") 
+         << ", Current Cycle: " << wm2.getCurrentCycle() << endl;
+
+    // Stop the machines
+    wm1.stop();
+    wm2.stop();
+
+    // Display total number of machines created
+    cout << "Total Washing Machines: " << WashingMachine::getTotalMachines() << endl;
+
+    return 0;
+}
