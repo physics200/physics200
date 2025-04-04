@@ -1,0 +1,34 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import LabelEncoder
+
+train = pd.read_csv("train.csv")
+test = pd.read_csv("test.csv")
+
+train["Age"].fillna(train["Age"].median(), inplace=True)
+test["Age"].fillna(test["Age"].median(), inplace=True)
+train["Embarked"].fillna(train["Embarked"].mode()[0], inplace=True)
+test["Fare"].fillna(test["Fare"].median(), inplace=True)
+
+train["Sex"] = train["Sex"].map({"male": 0, "female": 1})
+test["Sex"] = test["Sex"].map({"male": 0, "female": 1})
+
+train["Embarked"] = LabelEncoder().fit_transform(train["Embarked"])
+test["Embarked"] = LabelEncoder().fit_transform(test["Embarked"])
+
+features = ["Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked"]
+X = train[features]
+y = train["Survived"]
+X_test = test[features]
+
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X, y)
+
+predictions = model.predict(X_test)
+
+submission = pd.DataFrame({"PassengerId": test["PassengerId"], "Survived": predictions})
+submission.to_csv("submission.csv", index=False)
+
+print("Submission file 'submission.csv' created successfully!")
