@@ -1,0 +1,118 @@
+
+typedef struct DocNode {
+    int docID;
+    int freq;
+    int popularity;
+    struct DocNode *next;
+} DocNode;
+
+typedef struct BSTNode {
+    char word[64];
+    DocNode *postings;
+    struct BSTNode *left;
+    struct BSTNode *right;
+} BSTNode;
+
+BSTNode* insertWord(BSTNode *root, const char *word, int docID);
+BSTNode* searchWord(BSTNode *root, const char *word);
+void addToPostingList(DocNode **head, int docID);
+BSTNode* createBSTNode(const char *word, int docID);
+
+DocNode* createDocNode(int docID) {
+    DocNode *d = malloc(sizeof(DocNode));
+    d->docID = docID;
+    d->freq = 1;
+    d->popularity = 0;
+    d->next = NULL;
+    return d;
+}
+
+void addToPostingList(DocNode **head, int docID) {
+    DocNode *t = *head;
+
+    while (t) {
+        if (t->docID == docID) {
+            t->freq++;
+            return;
+        }
+        t = t->next;
+    }
+
+    DocNode *newNode = createDocNode(docID);
+    newNode->next = *head;
+    *head = newNode;
+}
+
+BSTNode* createBSTNode(const char *word, int docID) {
+    BSTNode *node = malloc(sizeof(BSTNode));
+    strcpy(node->word, word);
+    node->postings = NULL;
+
+    addToPostingList(&node->postings, docID);
+
+    node->left = node->right = NULL;
+    return node;
+}
+
+BSTNode* insertWord(BSTNode *root, const char *word, int docID) {
+    if (!root) 
+        return createBSTNode(word, docID);
+
+    int cmp = strcmp(word, root->word);
+
+    if (cmp < 0)
+        root->left = insertWord(root->left, word, docID);
+    else if (cmp > 0)
+        root->right = insertWord(root->right, word, docID);
+    else
+        addToPostingList(&root->postings, docID);
+
+    return root;
+}
+
+BSTNode* searchWord(BSTNode *root, const char *word) {
+    if (!root)
+        return NULL;
+
+    int cmp = strcmp(word, root->word);
+
+    if (cmp == 0)
+        return root;
+    if (cmp < 0)
+        return searchWord(root->left, word);
+
+    return searchWord(root->right, word);
+}
+
+
+int main() {
+    BSTNode *root = NULL;
+
+    // Simulated document input
+    root = insertWord(root, "apple", 1);
+    root = insertWord(root, "banana", 1);
+    root = insertWord(root, "apple", 2);
+    root = insertWord(root, "orange", 3);
+    root = insertWord(root, "banana", 2);
+
+    // Search example
+    char query[64] = "Apple";
+    cleanWord(query);
+
+    BSTNode *result = searchWord(root, query);
+
+    if (result) {
+        printf("Word found: %s\n", result->word);
+        DocNode *d = result->postings;
+
+        while (d) {
+            printf("Document %d | freq = %d | popularity = %d\n",
+                d->docID, d->freq, d->popularity);
+            d = d->next;
+        }
+    } else {
+        printf("Word not found.\n");
+    }
+
+    return 0;
+}
