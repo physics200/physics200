@@ -1,0 +1,166 @@
+////////////////////  indexer.h  //////////////////
+#ifndef INDEXER_H
+#define INDEXER_H
+
+#define WORD_SIZE 100
+#define TABLE_SIZE 1009
+
+typedef struct DocNode {
+    int docID;
+    int freq;
+    struct DocNode *next;
+} DocNode;
+
+typedef struct HashNode {
+    char word[WORD_SIZE];
+    DocNode *docs;
+    struct HashNode *next;
+} HashNode;
+
+extern HashNode *hashTable[TABLE_SIZE];
+
+void build_index(const char *directory);
+void insert_word(const char *word, int docID);
+void search_word(const char *word);
+void to_lowercase(char *s);
+
+#endif
+
+///////////////////////  indexer.c  //////////////////////
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <dirent.h>
+#include "indexer.h"
+
+HashNode *hashTable[TABLE_SIZE] = { NULL };
+
+unsigned int hash(const char *word) {
+    unsigned int h = 0;
+    while (*word) h = (h * 31) + *word++;
+    return h % TABLE_SIZE;
+}
+
+void to_lowercase(char *s) {
+    for (int i = 0; s[i]; i++)
+        s[i] = tolower(s[i]);
+}
+
+DocNode* add_doc(DocNode *head, int docID) {
+    DocNode *temp = head;
+    while (temp) {
+        if (temp->docID == docID) {
+            temp->freq++;
+            return head;
+        }
+        temp = temp->next;
+    }
+    DocNode *newDoc = malloc(sizeof(DocNode));
+    newDoc->docID = docID;
+    newDoc->freq = 1;
+    newDoc->next = head;
+    return newDoc;
+}
+
+void insert_word(const char *w, int docID) {
+    char word[WORD_SIZE];
+    strcpy(word, w);
+    to_lowercase(word);
+
+    unsigned int idx = hash(word);
+    HashNode *node = hashTable[idx];
+
+    while (node) {
+        if (strcmp(node->word, word) == 0) {
+            node->docs = add_doc(node->docs, docID);
+            return;
+        }
+        node = node->next;
+    }
+
+    HashNode *newNode = malloc(sizeof(HashNode));
+    strcpy(newNode->word, word);
+    newNode->docs = NULL;
+    newNode->docs = add_doc(newNode->docs, docID);
+    newNode->next = hashTable[idx];
+    hashTable[idx] = newNode;
+}
+
+void tokenize_and_insert(FILE *fp, int docID) {
+    char word[WORD_SIZE];
+    int c, i = 0;
+    while ((c = fgetc(fp)) != EOF) {
+        if (isalnum(c)) {
+            word[i++] = tolower(c);
+        } else {
+            if (i > 0) {
+                word[i] = '\0';
+                insert_word(word, docID);
+                i = 0;
+            }
+        }
+    }
+}
+
+void build_index(const char *directory) {
+    DIR *dir = opendir(directory);
+    if (!dir) return;
+
+    struct dirent *entry;
+    int docID = 1;
+    char path[256];
+
+    while ((entry = readdir(dir)) != NULL) {
+        if (strstr(entry->d_name, ".txt")) {
+            sprintf(path, "%s/%s", directory, entry->d_name);
+            FILE *fp = fopen(path, "r");
+            if (fp) {
+                tokenize_and_insert(fp, docID);
+                fclose(fp);
+            }
+            docID++;
+        }
+    }
+    closedir(dir);
+}
+
+void search_word(const char *w) {
+    char word[WORD_SIZE];
+    strcpy(word, w);
+    to_lowercase(word);
+
+    unsigned int idx = hash(word);
+    HashNode *node = hashTable[idx];
+
+    while (node) {
+        if (strcmp(node->word, word) == 0) {
+            DocNode *d = node->docs;
+            while (d) {
+                printf("Document %d | Frequency %d\n", d->docID, d->freq);
+                d = d->next;
+            }
+            return;
+        }
+        node = node->next;
+    }
+    printf("No results found.\n");
+}
+
+
+////////////////////  main.c  //////////////////
+#include <stdio.h>
+#include "indexer.h"
+
+int main() {
+    char query[WORD_SIZE];
+
+    build_index("docs");
+
+    while (1) {
+        printf("\nSearch: ");
+        scanf("%s", query);
+        search_word(query);
+    }
+}
